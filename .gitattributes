@@ -1,0 +1,2 @@
+aarch64/chrome-headless-shell/files/opt/chrome/chrome-headless-shell filter=lfs diff=lfs merge=lfs -text
+armhf/chromium-armhf/files/opt/chrome/chromium filter=lfs diff=lfs merge=lfs -text
