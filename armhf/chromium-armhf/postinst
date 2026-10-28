@@ -1,0 +1,7 @@
+#!/bin/sh
+[ -n "$IPKG_INSTROOT" ] || {
+	chmod 0755 /opt/chrome-root/run-chrome.sh /opt/chrome-root/opt/chrome/chromium /opt/chrome-root/opt/chrome/chrome_crashpad_handler 2>/dev/null
+	[ -e /opt/chrome-root/opt/chrome/chrome-headless-shell ] || ln -sf chromium /opt/chrome-root/opt/chrome/chrome-headless-shell
+	echo "chromium-armhf: /opt/chrome-root/run-chrome.sh --version"
+}
+exit 0

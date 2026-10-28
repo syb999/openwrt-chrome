@@ -1,0 +1,6 @@
+#!/bin/sh
+[ -n "$IPKG_INSTROOT" ] || {
+	chmod 0755 /opt/chrome-root/cdrv.sh /opt/chrome-root/opt/chrome-tools/chromedriver 2>/dev/null
+	echo "chromium-driver-armhf: /opt/chrome-root/cdrv.sh --version"
+}
+exit 0
