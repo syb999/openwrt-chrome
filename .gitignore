@@ -1,1 +1,3 @@
-armhf/ipk/
+armhf/ipk/*
+!armhf/ipk/luci-app-chrome-armhf_*.ipk
+!armhf/ipk/luci-i18n-chrome-armhf-zh-cn_*.ipk
