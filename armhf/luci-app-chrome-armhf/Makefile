@@ -19,7 +19,7 @@ PKG_NAME:=luci-app-chrome-armhf
 # 所以**每次发新版都必须把这个值往上抬**，否则 opkg 会判定 "installed in root is
 # up to date" 而拒绝安装（就地升级就"看不到新功能"）。
 # 约定：日期 + 当天第几版。
-PKG_VERSION:=2026-10-29-2
+PKG_VERSION:=2026-10-29-5
 PKG_RELEASE:=1
 PKG_LICENSE:=Apache-2.0
 PKG_MAINTAINER:=syb999
@@ -36,9 +36,11 @@ PKG_MAINTAINER:=syb999
 LUCI_TITLE:=LuCI App for headless Chromium (armhf / 32-bit ARM) - page grabber + media resource extractor
 #
 # 依赖 armhf 三件套(各自带 @TARGET_amlogic, 目标限制由此继承).
-# python3-selenium 会带进 python3-urllib + python3-openssl + certifi + urllib3.
+# python3-selenium 会带进 python3-urllib + python3-openssl + certifi + urllib3。
+# qqurl 直接用 websocket-client(模块名 websocket) 连 CDP,selenium 的 trio-websocket
+# 不提供这个模块名,所以必须显式依赖 python3-websocket-client。
 # 注意: 本包只装 ipk, **不进固件**(内存只有 1GB, 固件里放不下 chromium 的 400MB 载荷)。
-LUCI_DEPENDS:=+luci-base +chromium-armhf +chromium-driver-armhf +python3-selenium
+LUCI_DEPENDS:=+luci-base +chromium-armhf +chromium-driver-armhf +python3-selenium +python3-websocket-client
 LUCI_PKGARCH:=all
 
 # luci.mk only defines a default postinst `ifndef`, so this one replaces it:
