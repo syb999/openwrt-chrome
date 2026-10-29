@@ -19,7 +19,10 @@ fi
 
 is_mounted() { grep -q " $ROOT$1 " /proc/mounts; }
 
-mkdir -p /tmp/shm /tmp/chrome-profile 2>/dev/null
+# 每次运行用独立 profile: 共用 profile 会把 Chrome 的错误页缓存下来,
+# 修好网络后仍然一直返回旧的 ERR_* 页面(实测: 换 profile 后 bilibili 立刻正常)
+PROFILE="${CHROME_PROFILE:-/tmp/chrome-profile-$$}"
+mkdir -p /tmp/shm "$PROFILE" 2>/dev/null
 is_mounted /dev  || mount -o bind /dev  "$ROOT/dev"
 is_mounted /proc || mount -t proc proc  "$ROOT/proc"
 is_mounted /sys  || mount -o bind /sys  "$ROOT/sys"
@@ -29,8 +32,11 @@ is_mounted /tmp  || mount -o bind /tmp  "$ROOT/tmp"
 [ -s /tmp/resolv.conf ] && cp -f /tmp/resolv.conf "$ROOT/etc/resolv.conf" 2>/dev/null
 
 # headless 只要没被显式要求就不要 --headless; 默认给 new headless
+# 只有显式给了 --headless / --version 才不加。注意 --dump-dom/--screenshot/--print-to-pdf
+# 在完整 chromium 上**不代表 headless**(那是 chrome-headless-shell 的行为),
+# 少了 --headless 会去找 X server: "Missing X server or $DISPLAY ... platform failed to initialize"
 case " $* " in
-	*" --headless"*|*" --dump-dom"*|*" --screenshot"*|*" --print-to-pdf"*|*" --version"*) ;;
+	*" --headless"*|*" --version"*) ;;
 	*) set -- --headless=new "$@" ;;
 esac
 
@@ -39,5 +45,5 @@ exec chroot "$ROOT" "$BIN" \
     --disable-gpu \
     --disable-dev-shm-usage \
     --no-first-run \
-    --user-data-dir=/tmp/chrome-profile \
+    --user-data-dir=$PROFILE \
     "$@"

@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=chromium-driver-armhf
 PKG_VERSION:=150.0.7871.100
-PKG_RELEASE:=1
+PKG_RELEASE:=3
 
 PKG_LICENSE:=BSD-3-Clause
 PKG_MAINTAINER:=syb999

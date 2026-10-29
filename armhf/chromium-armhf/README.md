@@ -45,3 +45,33 @@ Google（Chrome / Chrome for Testing）只发布 `linux64` 和 `linux-arm64`，*
 - Cortex-A5 1.2GHz 无 NEON：Debian armhf 基线是 armv7+vfpv3-d16，兼容不会 SIGILL；
   渲染一个普通页面预计 3–10 秒，抓数据够用，当浏览器天天用会很痛苦
 - 内存 1GB 建议开 zram（单页约 250–350MB RSS）
+
+## 运行时依赖的两个隐藏坑（2026-10 设备实测，务必保留）
+
+1. **glibc 的 NSS 解析模块是 dlopen 的**，必须装在 `usr/lib/arm-linux-gnueabihf/`：
+   `libnss_dns.so.2`、`libnss_files.so.2`、`libnss_compat.so.2`、`libnss_hesiod.so.2`
+   （来自 Debian 的 **libc6** 包，不是 libnss3）。
+   缺了以后 chroot 内 `getaddrinfo()` 不通 ⇒ **只有 Chrome 早先缓存过 IP 的网站能打开**，
+   其余全是 `ERR_TIMED_OUT`。同时也需要 `libnss3` 的 crypto 模块：
+   `libsoftokn3 / libfreebl3 / libfreeblpriv3 / libnssckbi / libnssdbm3 / libsmime3 / libssl3`（+ `libsqlite3.so.0`），
+   缺了会在访问 https 时报 `FATAL:crypto/nss_util.cc nss_error=-5925` → 进程 `Aborted`。
+
+2. **每个进程要用独立 profile**：`run-chrome.sh` 里 `PROFILE="${CHROME_PROFILE:-/tmp/chrome-profile-$$}"`。
+   共用一个 profile 时 Chrome 会把错误页缓存下来，网络修好之后仍然一直返回旧的 `ERR_*` 页面
+   （特征：错误页字节数每次都完全相同）。
+   Selenium 侧**不要**自己传 `--user-data-dir`，chromedriver 会给每个会话建临时 profile。
+
+## 诊断工具
+
+```sh
+run-chrome.sh --headless=new --log-net-log=/tmp/nl.json --net-log-capture-mode=Everything --dump-dom <URL>
+```
+```python
+import json
+d = json.load(open("/tmp/nl.json"))
+m = {v: k for k, v in d["constants"]["logEventTypes"].items()}
+# HOST_RESOLVER_MANAGER_CACHE_HIT → ip_endpoints  (解析出了什么 IP)
+# SOCKET_CONNECT / TCP_CONNECT_ATTEMPT → address + net_error (-7 超时 / -10 拒绝 / -106 断网)
+```
+`ERR_INTERNET_DISCONNECTED` 和连 `[2001:4860:4860::8888]:443` 是 Chrome 的 Secure DNS/后台探测噪声，
+不是根因（`--disable-features=DnsOverHttps`、策略 `BuiltInDnsClientEnabled:false` 都治不了）。

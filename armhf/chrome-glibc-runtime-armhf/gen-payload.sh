@@ -95,6 +95,22 @@ while queue:
         libs[lib] = os.path.realpath(p)          # SONAME -> 真实文件
         queue.append(p)
 
+# 运行期 dlopen 的 NSS 模块: chromium 用 libnss3 做 HTTPS/TLS, 这些文件不在 NEEDED 链上,
+# 漏了会在第一次联网时 FATAL:crypto/nss_util.cc nss_error=-5925 (libsoftokn3.so 找不到),
+# 表现为 --version 正常、一访问 https 就 "Aborted"。
+for n in ("libfreebl3.so", "libfreeblpriv3.so", "libnssckbi.so", "libnssdbm3.so",
+          "libsmime3.so", "libsoftokn3.so", "libssl3.so", "libnss3.so",
+          "libnssutil3.so", "libsqlite3.so.0",
+          # glibc 的域名解析模块(运行时 dlopen): 缺了 chroot 内根本解析不了域名,
+          # 表现就是"只有能命中缓存的站点打得开"(实测: 补上之前只有百度能开)
+          "libnss_dns.so.2", "libnss_files.so.2",
+          "libnss_compat.so.2", "libnss_hesiod.so.2"):
+    for d in libdirs:
+        q = os.path.join(d, n)
+        if os.path.exists(q):
+            libs[n] = os.path.realpath(q)
+            break
+
 # 运行期 dlopen 的私有库(不在 NEEDED 链里)
 for p in glob.glob(f"{root}/usr/lib/**/libpulsecommon-*.so", recursive=True):
     libs[os.path.basename(p)] = os.path.realpath(p)

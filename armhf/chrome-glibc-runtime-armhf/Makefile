@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=chrome-glibc-runtime-armhf
 PKG_VERSION:=2026-10-28
-PKG_RELEASE:=1
+PKG_RELEASE:=3
 
 PKG_LICENSE:=LGPL-2.1-or-later MPL-2.0 MIT
 PKG_MAINTAINER:=syb999
